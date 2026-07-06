@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vibhor Gandharv — Interior Visualization &amp; Lighting Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* dark → light theme, sampled from the provided moodboard */
+    --c1:#0c0d08;   /* hero — near black */
+    --c2:#17170f;   /* about */
+    --c3:#2c2b21;   /* work overview */
+    --c4:#454434;   /* project 1 */
+    --c5:#615c47;   /* project 2 */
+    --c6:#8a8267;   /* project 3 — transitional */
+    --c7:#cbc2a4;   /* closing — light */
+    --c8:#f6f1e3;   /* footer — lightest */
+
+    --cream:#f3ecdc;
+    --cream-dim:#c9c0a8;
+    --ink:#211d13;
+    --ink-dim:#57503f;
+
+    --amber:#e3a857;
+    --amber-deep:#a9713c;
+    --amber-dim:#6b4f2c;
+
+    --line-dark: rgba(243,236,220,0.14);
+    --line-light: rgba(33,29,19,0.16);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+
+  body{
+    font-family:'Manrope', sans-serif;
+    overflow-x:hidden;
+    background: linear-gradient(
+      to bottom,
+      var(--c1) 0%,
+      var(--c2) 12%,
+      var(--c3) 26%,
+      var(--c4) 42%,
+      var(--c5) 58%,
+      var(--c6) 74%,
+      var(--c7) 88%,
+      var(--c8) 100%
+    );
+  }
+
+  ::selection{ background:var(--amber); color:#14110d; }
+  a{ color:inherit; }
+  img{ display:block; max-width:100%; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--amber);
+  }
+  .serif{ font-family:'Fraunces', serif; }
+
+  section{ position:relative; padding:7rem 8vw; }
+  @media (max-width:720px){ section{ padding:5rem 6vw; } }
+
+  /* zone text-color helpers */
+  .on-dark{ color:var(--cream); }
+  .on-dark .muted{ color:var(--cream-dim); }
+  .on-dark .hairline{ border-color:var(--line-dark); }
+  .on-dark .amber-acc{ color:var(--amber); }
+
+  .on-light{ color:var(--ink); }
+  .on-light .muted{ color:var(--ink-dim); }
+  .on-light .hairline{ border-color:var(--line-light); }
+  .on-light .amber-acc{ color:var(--amber-deep); }
+
+  /* reveal-on-scroll */
+  .reveal{ opacity:0; transform:translateY(28px); transition:opacity 0.9s ease, transform 0.9s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  .reveal-stagger > *{ opacity:0; transform:translateY(18px); transition:opacity 0.7s ease, transform 0.7s ease; }
+  .reveal-stagger.in > *{ opacity:1; transform:translateY(0); }
+  .reveal-stagger > *:nth-child(1){ transition-delay:0.02s; }
+  .reveal-stagger > *:nth-child(2){ transition-delay:0.1s; }
+  .reveal-stagger > *:nth-child(3){ transition-delay:0.18s; }
+  .reveal-stagger > *:nth-child(4){ transition-delay:0.26s; }
+  .reveal-stagger > *:nth-child(5){ transition-delay:0.34s; }
+  .reveal-stagger > *:nth-child(6){ transition-delay:0.42s; }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:1.6rem 8vw;
+    mix-blend-mode:difference;
+    pointer-events:none;
+  }
+  nav .mark{ font-family:'Fraunces', serif; font-weight:500; font-size:1rem; color:#f3ecdc; }
+  nav .links{
+    display:flex; gap:2.2rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem; letter-spacing:0.14em; text-transform:uppercase;
+    pointer-events:auto;
+  }
+  nav .links a{ text-decoration:none; opacity:0.85; color:#f3ecdc; }
+  nav .links a:hover{ opacity:1; }
+  @media (max-width:720px){ nav .links{ display:none; } }
+
+  /* ---------- HERO — 3D canvas ---------- */
+  #hero{
+    height:100svh;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  #hero-canvas{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    display:block;
+  }
+  .hero-overlay{
+    position:relative;
+    z-index:2;
+    text-align:center;
+    pointer-events:none;
+  }
+  .hero-word{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(3.2rem, 13vw, 10rem);
+    letter-spacing:0.01em;
+    line-height:1;
+    color:transparent;
+    -webkit-text-stroke:1.4px rgba(243,236,220,0.85);
+    text-stroke:1.4px rgba(243,236,220,0.85);
+  }
+  .hero-sub{
+    margin-top:1.4rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    color:var(--cream-dim);
+  }
+  .hero-name{
+    margin-top:0.6rem;
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-size:1.2rem;
+    color:var(--amber);
+  }
+  .scroll-cue{
+    position:absolute;
+    bottom:2.6rem; left:50%;
+    transform:translateX(-50%);
+    z-index:2;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.66rem; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--cream-dim);
+    display:flex; flex-direction:column; align-items:center; gap:0.6rem;
+  }
+  .scroll-cue .stick{
+    width:1px; height:34px;
+    background:linear-gradient(to bottom, var(--amber), transparent);
+    animation:scrollPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes scrollPulse{
+    0%,100%{ opacity:0.3; transform:scaleY(0.7); }
+    50%{ opacity:1; transform:scaleY(1); }
+  }
+
+  /* ---------- ABOUT ---------- */
+  #about{ padding-top:9rem; }
+  .about-grid{
+    display:grid;
+    grid-template-columns: 0.85fr 1.5fr;
+    gap:4.5rem;
+    align-items:start;
+  }
+  @media (max-width:860px){ .about-grid{ grid-template-columns:1fr; gap:3rem; } }
+
+  .portrait-wrap{
+    position:relative;
+    aspect-ratio:3/4;
+    overflow:hidden;
+    border:1px solid var(--line-dark);
+  }
+  .portrait-wrap img{
+    width:100%; height:120%;
+    object-fit:cover;
+    filter:grayscale(0.55) sepia(0.25) saturate(1.1) contrast(1.05);
+    will-change:transform;
+  }
+  .portrait-wrap::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(160deg, rgba(227,168,87,0.28), rgba(12,13,8,0.15) 70%);
+    mix-blend-mode:multiply;
+  }
+  .portrait-tag{
+    position:absolute; bottom:0; left:0; right:0;
+    padding:1rem 1.1rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.66rem; letter-spacing:0.1em; text-transform:uppercase;
+    background:linear-gradient(to top, rgba(0,0,0,0.55), transparent);
+    color:#f3ecdc;
+    z-index:2;
+  }
+
+  .section-heading{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(1.9rem, 3.4vw, 2.7rem);
+    margin-top:0.6rem;
+    line-height:1.15;
+  }
+
+  .about-copy p{
+    margin-top:1.6rem;
+    font-size:1.06rem;
+    line-height:1.75;
+    max-width:60ch;
+  }
+
+  .skills-list{ list-style:none; margin-top:2.4rem; }
+  .skills-list li{
+    padding:1.1rem 0;
+    border-bottom:1px solid;
+    display:flex; justify-content:space-between; align-items:baseline; gap:1rem;
+  }
+  .skills-list li:first-child{ border-top:1px solid; }
+  .skill-name{ font-family:'Fraunces', serif; font-size:1.12rem; font-weight:500; }
+  .skill-desc{ font-size:0.85rem; text-align:right; max-width:34ch; }
+
+  .tool-groups{ margin-top:1.8rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .tool-group-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.66rem; letter-spacing:0.1em; text-transform:uppercase;
+    margin-bottom:0.55rem;
+  }
+  .tool-tags{ display:flex; flex-wrap:wrap; gap:0.5rem; }
+  .tool-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.76rem;
+    padding:0.42rem 0.8rem;
+    border:1px solid;
+    border-radius:2px;
+  }
+
+  .contact-strip{
+    margin-top:3rem; padding-top:2rem; border-top:1px solid;
+    display:flex; flex-wrap:wrap; gap:0.4rem 2rem;
+    font-family:'IBM Plex Mono', monospace; font-size:0.8rem;
+  }
+  .contact-strip a{ text-decoration:none; border-bottom:1px solid var(--amber-dim); }
+
+  /* ---------- PROJECTS OVERVIEW ---------- */
+  #work{ padding-top:8rem; }
+  .work-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    flex-wrap:wrap; gap:1rem; margin-bottom:3.2rem;
+  }
+  .work-count{ font-family:'IBM Plex Mono', monospace; font-size:0.78rem; }
+
+  .work-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1.6rem; }
+  @media (max-width:860px){ .work-grid{ grid-template-columns:1fr; } }
+
+  .work-card{
+    position:relative;
+    height:460px;
+    overflow:hidden;
+    text-decoration:none;
+    display:block;
+    border:1px solid var(--line-dark);
+    perspective:900px;
+  }
+  .work-card .img-layer{
+    position:absolute; inset:-6%;
+    background-size:cover;
+    background-position:center;
+    transform:scale(1.08);
+    transition:transform 0.7s cubic-bezier(.16,.84,.44,1), filter 0.7s ease;
+    filter:brightness(0.62) saturate(1.05);
+    will-change:transform;
+  }
+  .work-card:hover .img-layer{
+    transform:scale(1.16);
+    filter:brightness(0.8) saturate(1.15);
+  }
+  .work-card .shade{
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(8,7,4,0.92) 0%, rgba(8,7,4,0.35) 45%, rgba(8,7,4,0.05) 70%);
+    z-index:1;
+  }
+  .work-card .card-content{
+    position:relative; z-index:2;
+    height:100%;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:2rem;
+    color:#f3ecdc;
+    transform:translateY(0);
+    transition:transform 0.5s cubic-bezier(.16,.84,.44,1);
+  }
+  .work-card:hover .card-content{ transform:translateY(-6px); }
+  .work-card .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:0.64rem;
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--amber);
+    margin-bottom:auto;
+  }
+  .work-card .num{
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--amber);
+  }
+  .work-card h3{
+    font-family:'Fraunces', serif; font-weight:500; font-size:1.55rem; line-height:1.2; margin-top:0.4rem;
+  }
+  .work-card .type{ margin-top:0.5rem; font-size:0.82rem; color:var(--cream-dim); }
+  .work-card .view{
+    margin-top:1.2rem;
+    font-family:'IBM Plex Mono', monospace; font-size:0.68rem;
+    letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--cream-dim);
+    opacity:0; transform:translateX(-8px);
+    transition:opacity 0.4s ease, transform 0.4s ease, color 0.3s ease;
+  }
+  .work-card:hover .view{ opacity:1; transform:translateX(0); color:var(--amber); }
+
+  /* ---------- PROJECT DETAIL ---------- */
+  .project-detail{ padding-top:8rem; }
+
+  .project-meta-row{
+    display:flex; justify-content:space-between; align-items:baseline;
+    flex-wrap:wrap; gap:1rem; margin-bottom:1.1rem;
+  }
+  .project-index{ font-family:'IBM Plex Mono', monospace; font-size:0.78rem; }
+  .project-title{
+    font-family:'Fraunces', serif; font-weight:500;
+    font-size:clamp(2rem, 4.5vw, 3.2rem);
+    line-height:1.08; max-width:20ch; margin-top:0.3rem;
+  }
+
+  .project-hero-frame{
+    margin-top:3rem;
+    overflow:hidden;
+    height:56vh;
+    min-height:340px;
+    position:relative;
+    border:1px solid var(--line-dark);
+  }
+  .project-hero-frame img{
+    width:100%; height:130%;
+    object-fit:cover;
+    will-change:transform;
+  }
+
+  .project-layout{
+    display:grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap:4rem;
+    margin-top:3.4rem;
+  }
+  @media (max-width:860px){ .project-layout{ grid-template-columns:1fr; gap:2.4rem; } }
+
+  .project-gallery{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.7rem;
+  }
+  .gallery-frame{
+    aspect-ratio:4/3;
+    overflow:hidden;
+    position:relative;
+    border:1px solid var(--line-dark);
+  }
+  .gallery-frame img{
+    width:100%; height:100%; object-fit:cover;
+    transform:scale(1.05);
+    transition:transform 0.6s cubic-bezier(.16,.84,.44,1), filter 0.6s ease;
+    filter:brightness(0.95);
+  }
+  .gallery-frame:hover img{ transform:scale(1.13); filter:brightness(1.05); }
+  .gallery-frame .cap{
+    position:absolute; bottom:0.6rem; left:0.6rem; z-index:2;
+    font-family:'IBM Plex Mono', monospace; font-size:0.6rem;
+    letter-spacing:0.08em; text-transform:uppercase; color:#f3ecdc;
+    text-shadow:0 1px 6px rgba(0,0,0,0.8);
+  }
+
+  .project-copy p{ font-size:1.02rem; line-height:1.75; max-width:56ch; }
+
+  .spec-table{ margin-top:2.2rem; border-top:1px solid; }
+  .spec-row{ display:flex; gap:1.5rem; padding:0.9rem 0; border-bottom:1px solid; }
+  .spec-key{
+    width:10.5rem; flex-shrink:0;
+    font-family:'IBM Plex Mono', monospace; font-size:0.68rem;
+    letter-spacing:0.08em; text-transform:uppercase;
+    padding-top:0.15rem;
+  }
+  .spec-val{ font-size:0.92rem; display:flex; flex-wrap:wrap; gap:0.4rem; }
+  .spec-val .chip{
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem;
+    padding:0.28rem 0.6rem; border:1px solid;
+  }
+
+  /* ---------- CLOSING ---------- */
+  #closing{
+    min-height:85svh;
+    display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
+  }
+  .closing-line{
+    font-family:'Fraunces', serif; font-weight:400; font-style:italic;
+    font-size:clamp(1.9rem, 5.2vw, 3.6rem); line-height:1.2; max-width:18ch;
+  }
+  .closing-line .accent{ color:var(--amber-deep); font-style:normal; font-weight:600; }
+  .closing-actions{ margin-top:3rem; display:flex; align-items:center; gap:2rem; flex-wrap:wrap; }
+  .btn-primary{
+    font-family:'IBM Plex Mono', monospace; font-size:0.78rem;
+    letter-spacing:0.1em; text-transform:uppercase; text-decoration:none;
+    color:#f6f1e3; background:var(--ink);
+    padding:1rem 1.8rem; border-radius:2px;
+    transition:background 0.2s ease, transform 0.2s ease;
+    display:inline-block;
+  }
+  .btn-primary:hover{ background:var(--amber-deep); transform:translateY(-2px); }
+  .closing-links{ display:flex; gap:1.6rem; font-family:'IBM Plex Mono', monospace; font-size:0.78rem; }
+  .closing-links a{ text-decoration:none; border-bottom:1px solid var(--ink-dim); }
+  .closing-links a:hover{ border-color:var(--ink); }
+
+  footer{
+    padding:2rem 8vw;
+    display:flex; justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace; font-size:0.7rem;
+    color:var(--ink-dim);
+    flex-wrap:wrap; gap:0.6rem;
+    border-top:1px solid var(--line-light);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .reveal, .reveal-stagger > *{ transition:none; opacity:1; transform:none; }
+    .work-card .img-layer, .gallery-frame img, .portrait-wrap img{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="mark">V. GANDHARV</div>
+  <div class="links">
+    <a href="#about">Profile</a>
+    <a href="#work">Work</a>
+    <a href="#closing">Contact</a>
+  </div>
+</nav>
+
+<!-- ================= HERO — 3D ================= -->
+<section id="hero" class="on-dark">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-overlay">
+    <div class="hero-word">PORTFOLIO</div>
+    <div class="hero-sub">Interior Visualization &amp; Lighting Design</div>
+    <div class="hero-name">Vibhor Gandharv</div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><span class="stick"></span></div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section id="about" class="on-dark">
+  <div class="about-grid">
+    <div class="reveal">
+      <div class="portrait-wrap" id="portraitWrap">
+        <img src="images/profile.jpg" alt="Portrait of Vibhor Gandharv" id="portraitImg">
+        <div class="portrait-tag">New Delhi, India</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="eyebrow reveal">Profile</div>
+      <h2 class="section-heading reveal">Self-taught. Studio-ready.</h2>
+      <div class="about-copy reveal">
+        <p class="muted">
+          I'm a self-taught 3D artist working across the full interior visualization
+          pipeline — space planning, material creation, lighting design, camera
+          composition, and post-production — to turn architectural concepts into
+          photorealistic, emotionally warm renders. No design degree, no studio
+          training — just deliberate practice inside Blender, project after project,
+          until the light started looking real.
+        </p>
+      </div>
+
+      <ul class="skills-list reveal-stagger hairline">
+        <li class="hairline"><span class="skill-name">Interior&nbsp;Visualization</span><span class="skill-desc muted">End-to-end space planning, layout development &amp; photoreal production</span></li>
+        <li class="hairline"><span class="skill-name">Lighting&nbsp;Design</span><span class="skill-desc muted">HDRI &amp; mixed natural/artificial setups, mood-driven light for every room</span></li>
+        <li class="hairline"><span class="skill-name">Material&nbsp;Creation</span><span class="skill-desc muted">PBR texturing &amp; shading — wood, fabric, stone, metal that read as real</span></li>
+        <li class="hairline"><span class="skill-name">Camera&nbsp;Composition</span><span class="skill-desc muted">Architectural framing &amp; focal choices that tell a spatial story</span></li>
+        <li class="hairline"><span class="skill-name">Photorealistic&nbsp;Rendering</span><span class="skill-desc muted">Cycles &amp; EEVEE tuned for quality against turnaround time</span></li>
+        <li class="hairline"><span class="skill-name">Post-Production</span><span class="skill-desc muted">Grading, compositing &amp; retouching to a magazine-ready finish</span></li>
+      </ul>
+
+      <div class="eyebrow reveal" style="margin-top:2.6rem;">Toolkit</div>
+      <div class="tool-groups reveal">
+        <div>
+          <div class="tool-group-label muted">3D &amp; Rendering</div>
+          <div class="tool-tags">
+            <span class="tool-tag hairline">Blender</span>
+            <span class="tool-tag hairline">Cycles</span>
+            <span class="tool-tag hairline">EEVEE</span>
+          </div>
+        </div>
+        <div>
+          <div class="tool-group-label muted">Compositing &amp; Editing</div>
+          <div class="tool-tags">
+            <span class="tool-tag hairline">Adobe Photoshop</span>
+            <span class="tool-tag hairline">Premiere pro</span>
+          </div>
+        </div>
+        <div>
+          <div class="tool-group-label muted">Motion &amp; AI-Assisted Workflow</div>
+          <div class="tool-tags">
+            <span class="tool-tag hairline">Runway</span>
+            <span class="tool-tag hairline">Sketch Up</span>
+            <span class="tool-tag hairline">Claude</span>
+          </div>
+        </div>
+        <div>
+          <div class="tool-group-label muted">Presentation &amp; Design</div>
+          <div class="tool-tags"><span class="tool-tag hairline">Canva</span></div>
+          <div class="tool-tags"><span class="tool-tag hairline">Inkscape</span></div>
+        </div>
+      </div>
+
+      <div class="contact-strip hairline reveal">
+        <span><a href="mailto:gandharvvibhor@gmail.com">gandharvvibhor@gmail.com</a></span>
+        <span class="muted">+91 9354113933</span>
+        <span class="muted">New Delhi, India</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROJECTS OVERVIEW ================= -->
+<section id="work" class="on-dark">
+  <div class="work-head reveal">
+    <div>
+      <div class="eyebrow">Selected Work</div>
+      <h2 class="section-heading">Different Theme.<br>Different moods.</h2>
+    </div>
+    <div class="work-count muted">01 — 03 / Interior &amp; Healthcare Visualization</div>
+  </div>
+
+  <div class="work-grid reveal-stagger">
+    <a class="work-card" href="#project-1" data-tilt>
+      <div class="img-layer" style="background-image:url('images/IMG_3675.PNG')"></div>
+      <div class="shade"></div>
+      <div class="card-content">
+        <span class="tag">Residential</span>
+        <div class="num">01</div>
+        <h3>Warm Contemporary Residence</h3>
+        <div class="type">Full-home interior · 8 spaces</div>
+        <div class="view">View project →</div>
+      </div>
+    </a>
+
+    <a class="work-card" href="#project-2" data-tilt>
+      <div class="img-layer" style="background-image:url('images/proj2-hero.jpg')"></div>
+      <div class="shade"></div>
+      <div class="card-content">
+        <span class="tag">Healthcare</span>
+        <div class="num">02</div>
+        <h3>Patient-Centric Healthcare Center</h3>
+        <div class="type">Commercial interior · 4 spaces</div>
+        <div class="view">View project →</div>
+      </div>
+    </a>
+
+    <a class="work-card" href="#project-3" data-tilt>
+      <div class="img-layer" style="background-image:url('images/proj3-living.jpg')"></div>
+      <div class="shade"></div>
+      <div class="card-content">
+        <span class="tag">Residential</span>
+        <div class="num">03</div>
+        <h3>Warm Minimalism Residence</h3>
+        <div class="type">Living, dining &amp; bath visualization</div>
+        <div class="view">View project →</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ================= PROJECT 1 ================= -->
+<section class="project-detail on-dark" id="project-1">
+  <div class="project-meta-row reveal">
+    <div class="project-index muted">01 / 03 — Residential</div>
+  </div>
+  <h2 class="project-title reveal">Warm Contemporary Residence</h2>
+
+  <div class="project-hero-frame reveal" data-parallax-img>
+    <img src="images/IMG_3675.PNG" alt="Living room render, Warm Contemporary Residence">
+  </div>
+
+  <div class="project-layout">
+    <div class="project-gallery reveal-stagger">
+      <div class="gallery-frame"><img src="images/IMG_3644.PNG" alt="Foyer render"><span class="cap">Foyer</span></div>
+      <div class="gallery-frame"><img src="images/IMG_3642.PNG" alt="Living Room render"><span class="cap">Living Room</span></div>
+      <div class="gallery-frame"><img src="images/proj1-kitchen.jpg" alt="Foyer render"><span class="cap">Modular Kitchen</span></div>
+      <div class="gallery-frame"><img src="images/untitled.png" alt="Foyer render"><span class="cap">Dinning Area</span></div>
+      <div class="gallery-frame"><img src="images/guest room shot 2.png" alt="Guest bedroom render"><span class="cap">Bedroom</span></div>
+      <div class="gallery-frame"><img src="images/proj1-kids.jpg" alt="Kids bedroom render"><span class="cap">Kids' Bedroom</span></div>
+    </div>
+
+    <div class="project-copy reveal">
+      <p class="muted">
+        A complete residential interior spanning the foyer, living room, dining area,
+        modular kitchen, master bedroom, kids' bedroom.
+        Every space was developed from the ground up — space planning, material and
+        colour selection, custom furniture design, and lighting integration — into
+        photorealistic renders built around functionality and a modern, livable warmth.
+      </p>
+
+      <div class="spec-table hairline">
+        <div class="spec-row hairline">
+          <div class="spec-key">Scope</div>
+          <div class="spec-val muted">Foyer · Living Room · Dining · Kitchen · Master Bedroom · Guest Bedroom · Kids' Bedroom · TV Lounge</div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Materials</div>
+          <div class="spec-val">
+            <span class="chip hairline">Warm oak veneer</span>
+            <span class="chip hairline">Matte lacquer cabinetry</span>
+            <span class="chip hairline">Boucle upholstery</span>
+            <span class="chip hairline">Brushed brass fixtures</span>
+          </div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Lighting</div>
+          <div class="spec-val muted">Layered warm-white cove &amp; pendant lighting, softbox-simulated daylight through openings</div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Tools</div>
+          <div class="spec-val"><span class="chip hairline">Blender / Cycles</span><span class="chip hairline">Photoshop</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROJECT 2 ================= -->
+<section class="project-detail on-dark" id="project-2">
+  <div class="project-meta-row reveal">
+    <div class="project-index muted">02 / 03 — Healthcare</div>
+  </div>
+  <h2 class="project-title reveal">Patient-Centric Healthcare Center</h2>
+
+  <div class="project-hero-frame reveal" data-parallax-img>
+    <img src="images/proj2-hero.jpg" alt="Entrance render, Healthcare Center">
+  </div>
+
+  <div class="project-layout">
+    <div class="project-gallery reveal-stagger">
+      <div class="gallery-frame"><img src="images/proj2-consult.jpg" alt="Consultation room render"><span class="cap">Consultation Room</span></div>
+      <div class="gallery-frame"><img src="images/ChatGPT Image Jul 5, 2026, 12_50_05 AM.png" alt="Consultation room render"><span class="cap">Washroom</span></div>
+      <div class="gallery-frame" style="grid-column:1 / -1;"><img src="images/proj2-ct.jpg" alt="CT scan suite render"><span class="cap">CT Scan Suite</span></div>
+    </div>
+
+    <div class="project-copy reveal">
+      <p class="muted">
+        A modern healthcare center designed around patient comfort — a welcoming
+        reception and waiting area, consultation room, CT scan suite, and washroom.
+        The brief called for efficient space planning and seamless circulation, but
+        the real challenge was making a clinical program feel calm: natural materials,
+        soft geometry, and warm lighting throughout, without compromising the
+        operational needs of a working medical facility.
+      </p>
+
+      <div class="spec-table hairline">
+        <div class="spec-row hairline">
+          <div class="spec-key">Scope</div>
+          <div class="spec-val muted">Reception &amp; Waiting Area · Consultation Room · CT Scan Suite · Washroom</div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Materials</div>
+          <div class="spec-val">
+            <span class="chip hairline">Light ash wood panelling</span>
+            <span class="chip hairline">Soft-touch vinyl flooring</span>
+            <span class="chip hairline">Frosted glass partitions</span>
+          </div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Lighting</div>
+          <div class="spec-val muted">Diffused ceiling wash + warm accent lighting to offset clinical fixtures, calming rather than sterile</div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Tools</div>
+          <div class="spec-val"><span class="chip hairline">Blender / Cycles</span><span class="chip hairline">Photoshop</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROJECT 3 ================= -->
+<section class="project-detail on-light" id="project-3">
+  <div class="project-meta-row reveal">
+    <div class="project-index muted">03 / 03 — Residential</div>
+  </div>
+  <h2 class="project-title reveal">Warm Minimalism Residence</h2>
+
+  <div class="project-hero-frame reveal" data-parallax-img>
+    <img src="images/proj3-living.jpg" alt="Living and dining render, Warm Minimalism Residence">
+  </div>
+
+  <div class="project-layout">
+    <div class="project-gallery reveal-stagger">
+      <div class="gallery-frame"><img src="images/proj3-hero.jpg" alt="Living area detail render"><span class="cap">Living Detail</span></div>
+      <div class="gallery-frame"><img src="images/proj3-bath.jpg" alt="Bathroom render"><span class="cap">Bathroom</span></div>
+    </div>
+
+    <div class="project-copy reveal">
+      <p class="muted">
+        A contemporary residential interior built around warm minimalism, with
+        photorealistic visualization spanning the living, dining, and bath spaces.
+        Efficient space planning, premium material selection, custom furniture,
+        and ambient lighting come together into a refined, cohesive living
+        environment — quiet in its palette, deliberate in its detailing.
+      </p>
+
+      <div class="spec-table hairline">
+        <div class="spec-row hairline">
+          <div class="spec-key">Scope</div>
+          <div class="spec-val muted">Living Room · Dining Area · Bathroom</div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Materials</div>
+          <div class="spec-val">
+            <span class="chip hairline">Honed limestone</span>
+            <span class="chip hairline">Linen upholstery</span>
+            <span class="chip hairline">Walnut millwork</span>
+          </div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Lighting</div>
+          <div class="spec-val muted">Ambient ceiling wash + a single sculptural pendant as the room's warm focal point</div>
+        </div>
+        <div class="spec-row hairline">
+          <div class="spec-key">Tools</div>
+          <div class="spec-val"><span class="chip hairline">Blender / Cycles</span><span class="chip hairline">Photoshop</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CLOSING ================= -->
+<section id="closing" class="on-light">
+  <div class="eyebrow reveal" style="margin-bottom:1.6rem;">For Recruiters &amp; Studios</div>
+  <p class="closing-line reveal">
+    Anyone can model a room.<br>
+    I design <span class="accent">how it feels</span> to stand in one.
+  </p>
+
+  <div class="closing-actions reveal">
+    <a class="btn-primary" href="mailto:gandharvvibor@gmail.com">Get in touch</a>
+    <div class="closing-links">
+      <a href="tel:+919354113933">+91 9354113933</a>
+      <a href="mailto:gandharvvibhor@gmail.com">gandharvvibhor@gmail.com</a>
+    </div>
+  </div>
+</section>
+
+<footer class="on-light">
+  <span>Vibhor Gandharv — Interior Visualization &amp; Lighting Design</span>
+  <span>New Delhi, India</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---------------- 3D HERO BACKGROUND ---------------- */
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  const heroSection = document.getElementById('hero');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 11);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  // group of wireframe boxes — abstract architectural massing, drifting slowly
+  const group = new THREE.Group();
+  const amber = new THREE.Color(0xe3a857);
+  const cream = new THREE.Color(0xf3ecdc);
+  const boxCount = window.innerWidth < 720 ? 26 : 46;
+
+  const meshes = [];
+  for(let i=0;i<boxCount;i++){
+    const size = 0.5 + Math.random()*1.6;
+    const geo = new THREE.BoxGeometry(size, size, size);
+    const edges = new THREE.EdgesGeometry(geo);
+    const colorMix = Math.random();
+    const col = amber.clone().lerp(cream, colorMix*0.7);
+    const mat = new THREE.LineBasicMaterial({ color: col, transparent:true, opacity: 0.28 + Math.random()*0.35 });
+    const line = new THREE.LineSegments(edges, mat);
+
+    const radius = 4 + Math.random()*5.5;
+    const theta = Math.random()*Math.PI*2;
+    const phi = Math.acos((Math.random()*2)-1);
+    line.position.set(
+      radius*Math.sin(phi)*Math.cos(theta),
+      radius*Math.sin(phi)*Math.sin(theta)*0.6,
+      radius*Math.cos(phi)*0.6 - 2
+    );
+    line.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+    line.userData = {
+      spin: (Math.random()-0.5)*0.006,
+      spin2: (Math.random()-0.5)*0.004,
+      bobSpeed: 0.2 + Math.random()*0.3,
+      bobOffset: Math.random()*Math.PI*2,
+      baseY: line.position.y
+    };
+    group.add(line);
+    meshes.push(line);
+  }
+  scene.add(group);
+
+  let mouseX = 0, mouseY = 0;
+  window.addEventListener('mousemove', (e)=>{
+    mouseX = (e.clientX / window.innerWidth - 0.5);
+    mouseY = (e.clientY / window.innerHeight - 0.5);
+  });
+
+  function resize(){
+    const w = window.innerWidth, h = window.innerHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w,h);
+  }
+  window.addEventListener('resize', resize);
+
+  const clock = new THREE.Clock();
+  let isHeroVisible = true;
+
+  function animate(){
+    if (!isHeroVisible) return; // pause loop off-screen for performance
+    const t = clock.getElapsedTime();
+    group.rotation.y = t*0.045;
+    group.rotation.x = Math.sin(t*0.05)*0.08;
+
+    meshes.forEach(m=>{
+      m.rotation.x += m.userData.spin;
+      m.rotation.y += m.userData.spin2;
+      m.position.y = m.userData.baseY + Math.sin(t*m.userData.bobSpeed + m.userData.bobOffset)*0.25;
+    });
+
+    camera.position.x += (mouseX*1.4 - camera.position.x)*0.03;
+    camera.position.y += (-mouseY*1.0 - camera.position.y)*0.03;
+    camera.lookAt(0,0,-2);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      isHeroVisible = entry.isIntersecting;
+      if (isHeroVisible && !reduceMotion) requestAnimationFrame(animate);
+    });
+  }, { threshold: 0.05 });
+  io.observe(heroSection);
+
+  if (reduceMotion){
+    renderer.render(scene, camera);
+  } else {
+    requestAnimationFrame(animate);
+  }
+})();
+
+/* ---------------- REVEAL ON SCROLL ---------------- */
+(function(){
+  const els = document.querySelectorAll('.reveal, .reveal-stagger');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if (entry.isIntersecting){
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold:0.15, rootMargin:'0px 0px -60px 0px' });
+  els.forEach(el=>io.observe(el));
+})();
+
+/* ---------------- PARALLAX: hero images inside frames + portrait ---------------- */
+(function(){
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  const parallaxEls = [
+    ...document.querySelectorAll('[data-parallax-img] img'),
+  ];
+  const portraitImg = document.getElementById('portraitImg');
+  if (portraitImg) parallaxEls.push(portraitImg);
+
+  let ticking = false;
+  function updateParallax(){
+    const vh = window.innerHeight;
+    parallaxEls.forEach(img=>{
+      const rect = img.parentElement.getBoundingClientRect();
+      const progress = (rect.top + rect.height/2 - vh/2) / vh; // -ish to +ish
+      const shift = progress * -30; // px
+      img.style.transform = `translateY(${shift}px) scale(1.05)`;
+    });
+    ticking = false;
+  }
+  window.addEventListener('scroll', ()=>{
+    if (!ticking){
+      requestAnimationFrame(updateParallax);
+      ticking = true;
+    }
+  });
+  updateParallax();
+})();
+
+/* ---------------- WORK CARD 3D TILT ---------------- */
+(function(){
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+  const cards = document.querySelectorAll('.work-card[data-tilt]');
+
+  cards.forEach(card=>{
+    card.addEventListener('mousemove', (e)=>{
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      const rotY = x * 6;
+      const rotX = -y * 6;
+      card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    });
+    card.addEventListener('mouseleave', ()=>{
+      card.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg)';
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
